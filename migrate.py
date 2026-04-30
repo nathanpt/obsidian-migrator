@@ -49,6 +49,46 @@ REQUIRED_FONTS = {
     "Geist Mono": "https://github.com/vercel/geist-font",
 }
 
+SENSITIVE_KEY_PATTERNS = [
+    "apikey", "api_key", "apiauthtoken", "apitoken",
+    "secret", "clientsecret", "client_secret",
+    "password",
+    "accesstoken", "access_token",
+    "licensekey", "license_key", "lemonsqueezylicensekey",
+    "googleoauthclientid", "googleoauthclientsecret",
+    "microsoftoauthclientid", "microsoftoauthclientsecret",
+    "bearertoken", "authtoken", "credentials",
+    "naverclientsecret", "naverclientid",
+]
+
+
+def redact_json(data) -> tuple:
+    """Recursively redact sensitive values in a JSON structure.
+
+    Returns (redacted_data, list_of_redacted_keys).
+    """
+    redacted_keys = []
+    if isinstance(data, dict):
+        result = {}
+        for key, value in data.items():
+            key_lower = key.lower()
+            if any(pattern in key_lower for pattern in SENSITIVE_KEY_PATTERNS):
+                if value:  # only flag if non-empty
+                    redacted_keys.append(key)
+                result[key] = ""
+            else:
+                result[key], child_keys = redact_json(value)
+                redacted_keys.extend(child_keys)
+        return result, redacted_keys
+    elif isinstance(data, list):
+        result = []
+        for item in data:
+            redacted_item, child_keys = redact_json(item)
+            result.append(redacted_item)
+            redacted_keys.extend(child_keys)
+        return result, redacted_keys
+    return data, redacted_keys
+
 
 def log(msg: str) -> None:
     print(f"  {msg}")
@@ -262,7 +302,7 @@ def apply_config(vault_path: Path, dry_run: bool = False) -> None:
         print("Migration complete! Please restart Obsidian to apply changes.")
 
 
-def export_config(vault_path: Path, dry_run: bool = False) -> None:
+def export_config(vault_path: Path, dry_run: bool = False, no_redact: bool = False) -> None:
     obsidian_dir = vault_path / ".obsidian"
 
     if not obsidian_dir.exists():
@@ -309,7 +349,14 @@ def export_config(vault_path: Path, dry_run: bool = False) -> None:
                     if dry_run:
                         log(f"  Would export {plugin_dir.name}/data.json")
                     else:
-                        shutil.copy2(data_file, dst)
+                        with open(data_file) as f:
+                            data = json.load(f)
+                        if not no_redact:
+                            data, redacted = redact_json(data)
+                            if redacted:
+                                log(f"  REDACTED from {plugin_dir.name}: {', '.join(redacted)}")
+                        with open(dst, "w") as f:
+                            json.dump(data, f, indent=2, ensure_ascii=False)
                         log(f"  Exported {plugin_dir.name}/data.json")
 
     print()
@@ -331,6 +378,9 @@ def main() -> None:
         p.add_argument("--vault", required=True, type=Path, help="Path to Obsidian vault")
         p.add_argument("--dry-run", action="store_true", help="Preview without making changes")
 
+    export_parser = subparsers.choices["export"]
+    export_parser.add_argument("--no-redact", action="store_true", help="Skip sensitive data redaction")
+
     args = parser.parse_args()
     vault = args.vault.resolve()
 
@@ -342,7 +392,7 @@ def main() -> None:
     if args.command == "apply":
         apply_config(vault, dry_run=args.dry_run)
     elif args.command == "export":
-        export_config(vault, dry_run=args.dry_run)
+        export_config(vault, dry_run=args.dry_run, no_redact=args.no_redact)
 
 
 if __name__ == "__main__":
