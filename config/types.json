@@ -1,0 +1,12 @@
+{
+  "types": {
+    "aliases": "aliases",
+    "cssclasses": "multitext",
+    "tags": "tags",
+    "publish_date": "text",
+    "total_pages": "text",
+    "source": "multitext",
+    "published": "date",
+    "created": "date"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "addToCommand": true,
+  "addToContextMenu": true,
+  "createInstanceNearExistingOnes": true,
+  "errorNoticeTimeout": 0,
+  "exposeInternalModules": true,
+  "focusOnNewInstance": true,
+  "hideStatusBar": "focused",
+  "interceptLogging": false,
+  "language": "",
+  "macOSOptionKeyPassthrough": false,
+  "newInstanceBehavior": "newHorizontalSplit",
+  "noticeTimeout": 5,
+  "openChangelogOnUpdate": true,
+  "pinNewInstance": true,
+  "preferredRenderer": "webgl",
+  "profiles": {
+    "d301d741-20b9-4a76-baf3-b09ae766b424": {
+      "args": [
+        "claude"
+      ],
+      "executable": "powershell.exe",
+      "followTheme": true,
+      "name": "PowerShell",
+      "platforms": {
+        "win32": true
+      },
+      "pythonExecutable": "python",
+      "restoreHistory": false,
+      "rightClickAction": "copyPaste",
+      "successExitCodes": [
+        "0",
+        "SIGINT",
+        "SIGTERM"
+      ],
+      "terminalOptions": {
+        "documentOverride": null
+      },
+      "type": "integrated",
+      "useWin32Conhost": true
+    }
+  },
+  "defaultProfile": "d301d741-20b9-4a76-baf3-b09ae766b424",
+  "terminalOptions": {
+    "documentOverride": null
+  }
+}

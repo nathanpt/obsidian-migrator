@@ -1,0 +1,7 @@
+.two-columns {
+    column-count: var(--column-count, 2);
+    }
+.callout[data-callout=”north-star”] {
+--callout-color: 158, 158, 158;
+--callout-icon: sparkle;
+}

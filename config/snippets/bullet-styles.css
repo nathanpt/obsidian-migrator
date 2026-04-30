@@ -1,0 +1,6 @@
+.markdown-rendered ul > li > .list-bullet::after,
+.cm-list-1 .cm-list-bullet::after {
+    content: "—"; /* Long dash */
+    background-color: transparent !important;
+    visibility: visible;
+}

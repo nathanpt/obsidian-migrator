@@ -1,0 +1,10 @@
+{
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "current",
+  "attachmentFolderPath": "90_System/92_Attachments",
+  "newLinkFormat": "absolute",
+  "spellcheck": false,
+  "vimMode": false,
+  "readableLineLength": false,
+  "showUnsupportedFiles": true
+}

@@ -1,0 +1,30 @@
+{
+  "collapse-filter": true,
+  "search": "path:\"Quant Lab Books\"  ",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": true,
+  "showOrphans": true,
+  "collapse-color-groups": true,
+  "colorGroups": [
+    {
+      "query": "tag:#book  ",
+      "color": {
+        "a": 1,
+        "rgb": 14701138
+      }
+    }
+  ],
+  "collapse-display": true,
+  "showArrow": false,
+  "textFadeMultiplier": 0.8,
+  "nodeSizeMultiplier": 1.57967775467775,
+  "lineSizeMultiplier": 2.0279106029106,
+  "collapse-forces": false,
+  "centerStrength": 0.23960498960499,
+  "repelStrength": 1.88149688149688,
+  "linkStrength": 0.489085239085239,
+  "linkDistance": 141,
+  "scale": 1.401982897776122,
+  "close": true
+}

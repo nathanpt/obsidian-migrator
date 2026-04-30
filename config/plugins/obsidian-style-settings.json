@@ -1,0 +1,17 @@
+{
+  "minimal-style@@minimal-unstyled-tags": true,
+  "minimal-style@@h1-size": "1.8em",
+  "minimal-style@@h1-l": true,
+  "minimal-style@@h2-size": "1.5em",
+  "minimal-style@@h2-l": false,
+  "minimal-style@@h3-size": "1.2em",
+  "minimal-style@@h1-weight": 700,
+  "minimal-style@@h2-weight": 700,
+  "minimal-style@@h3-weight": 700,
+  "minimal-style@@h4-size": "1em",
+  "minimal-style@@h4-weight": 600,
+  "minimal-style@@list-spacing": 0.08,
+  "minimal-style@@list-indent": 2,
+  "minimal-style@@bold-modifier": 300,
+  "minimal-style@@checkbox-shape": "checkbox-square"
+}
