@@ -10,6 +10,7 @@ import argparse
 import json
 import shutil
 import sys
+import time
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -99,9 +100,42 @@ def download_json(url: str) -> list | dict:
         return json.loads(resp.read().decode())
 
 
-def download_file(url: str, dest: Path) -> None:
-    with urllib.request.urlopen(url) as resp:
-        dest.write_bytes(resp.read())
+def download_file(url: str, dest: Path, max_retries: int = 3, retry_delay: float = 2.0) -> None:
+    """Download a file with retry logic and atomic writes.
+
+    Writes to a .tmp file first, then renames on success.
+    Retries up to max_retries times on transient network errors only.
+    HTTP 404s are not retried since they indicate a missing resource.
+    Raises on final failure or if downloaded file is empty.
+    """
+    tmp = dest.with_suffix(dest.suffix + ".tmp")
+    for attempt in range(1, max_retries + 1):
+        try:
+            with urllib.request.urlopen(url) as resp:
+                data = resp.read()
+            if not data:
+                raise IOError(f"Downloaded empty file from {url}")
+            tmp.write_bytes(data)
+            tmp.replace(dest)
+            return
+        except urllib.error.HTTPError as e:
+            if tmp.exists():
+                tmp.unlink()
+            if e.code == 404:
+                raise
+            if attempt < max_retries:
+                log(f"    Retry {attempt}/{max_retries} for {dest.name}: {e}")
+                time.sleep(retry_delay)
+            else:
+                raise
+        except (urllib.error.URLError, IOError, OSError) as e:
+            if tmp.exists():
+                tmp.unlink()
+            if attempt < max_retries:
+                log(f"    Retry {attempt}/{max_retries} for {dest.name}: {e}")
+                time.sleep(retry_delay)
+            else:
+                raise
 
 
 def resolve_plugin_repo(plugin_id: str) -> str | None:
@@ -138,7 +172,51 @@ def backup_obsidian(obsidian_dir: Path) -> Path:
     return backup
 
 
-def apply_config(vault_path: Path, dry_run: bool = False) -> None:
+def verify_vault(vault_path: Path) -> list[str]:
+    """Verify that all required files exist and are non-empty after apply.
+
+    Returns a list of error messages. Empty list means all checks passed.
+    """
+    errors = []
+    obsidian_dir = vault_path / ".obsidian"
+
+    # Core config files
+    for filename in CORE_CONFIG_FILES:
+        fpath = obsidian_dir / filename
+        if not fpath.exists():
+            errors.append(f"Missing core config: {filename}")
+        elif fpath.stat().st_size == 0:
+            errors.append(f"Empty core config: {filename}")
+
+    # Active theme
+    appearance_file = obsidian_dir / "appearance.json"
+    if appearance_file.exists():
+        with open(appearance_file) as f:
+            theme_name = json.load(f).get("cssTheme")
+        if theme_name:
+            theme_css = obsidian_dir / "themes" / theme_name / "theme.css"
+            if not theme_css.exists():
+                errors.append(f"Missing theme CSS: themes/{theme_name}/theme.css")
+            elif theme_css.stat().st_size == 0:
+                errors.append(f"Empty theme CSS: themes/{theme_name}/theme.css")
+
+    # Community plugins
+    cp_file = obsidian_dir / "community-plugins.json"
+    if cp_file.exists():
+        with open(cp_file) as f:
+            plugin_ids = json.load(f)
+        for plugin_id in plugin_ids:
+            plugin_dir = obsidian_dir / "plugins" / plugin_id
+            main_js = plugin_dir / "main.js"
+            if not main_js.exists():
+                errors.append(f"Missing plugin main.js: plugins/{plugin_id}/main.js")
+            elif main_js.stat().st_size == 0:
+                errors.append(f"Empty plugin main.js: plugins/{plugin_id}/main.js")
+
+    return errors
+
+
+def apply_config(vault_path: Path, dry_run: bool = False, no_verify: bool = False) -> None:
     obsidian_dir = vault_path / ".obsidian"
 
     if not vault_path.exists():
@@ -299,6 +377,20 @@ def apply_config(vault_path: Path, dry_run: bool = False) -> None:
     if dry_run:
         print("Dry run complete. No changes were made.")
     else:
+        if not no_verify:
+            log("Verifying vault integrity...")
+            errors = verify_vault(vault_path)
+            if errors:
+                print()
+                print("VERIFICATION FAILED - the following issues were detected:")
+                for err in errors:
+                    print(f"  X {err}")
+                print()
+                print("Migration completed with errors. Some plugins or themes may not work.")
+                print("Re-run the script or install missing components manually.")
+                sys.exit(1)
+            else:
+                log("All checks passed.")
         print("Migration complete! Please restart Obsidian to apply changes.")
 
 
@@ -381,6 +473,9 @@ def main() -> None:
     export_parser = subparsers.choices["export"]
     export_parser.add_argument("--no-redact", action="store_true", help="Skip sensitive data redaction")
 
+    apply_parser = subparsers.choices["apply"]
+    apply_parser.add_argument("--no-verify", action="store_true", help="Skip post-apply verification")
+
     args = parser.parse_args()
     vault = args.vault.resolve()
 
@@ -390,7 +485,7 @@ def main() -> None:
     print()
 
     if args.command == "apply":
-        apply_config(vault, dry_run=args.dry_run)
+        apply_config(vault, dry_run=args.dry_run, no_verify=args.no_verify)
     elif args.command == "export":
         export_config(vault, dry_run=args.dry_run, no_redact=args.no_redact)
 
