@@ -53,3 +53,7 @@ git add config/ && git commit -m "update config" && git push
 - `workspace.json` (open tabs, UI layout) is excluded since it's machine-specific
 - `claudian` is not in the community plugins registry and must be installed manually
 - Fonts are not installed automatically -- the script will warn if they're missing
+
+## Screenshots
+
+<img width="2560" height="1380" alt="image" src="https://github.com/user-attachments/assets/671f3f85-0fac-433c-867f-0a57e8ea7a2a" />
