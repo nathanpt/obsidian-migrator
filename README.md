@@ -57,3 +57,5 @@ git add config/ && git commit -m "update config" && git push
 ## Screenshots
 
 <img width="2560" height="1380" alt="image" src="https://github.com/user-attachments/assets/671f3f85-0fac-433c-867f-0a57e8ea7a2a" />
+<img width="2560" height="1380" alt="image" src="https://github.com/user-attachments/assets/7b90a356-998e-47b6-91c0-868cdfcec892" />
+
